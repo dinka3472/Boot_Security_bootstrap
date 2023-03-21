@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Admin page</title>
+    <link rel="shortcut icon" href="">
+    <link rel="icon" type="image/gif" href="">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+</head>
+<body th:fragment="alltabs" class="content"  tabindex="-1">
+<th:block th:replace="modal1 :: modal('editUserModal')">modal</th:block>
+<th:block th:replace="modal_delete :: modal('deleteUserModal')">modal</th:block>
+<div >
+    <ul class="nav nav-tabs mt-5" id="myTabs">
+        <li class="nav-item">
+            <a href="#tab1" id="admin-tab" data-url="/tab1"  class="nav-link active">
+                All users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="#tab2" id="user-tab" data-url="/tab2" class="nav-link ">
+                Add user
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content pt-3">
+        <div class="tab-pane active" id="tab1">
+            <th:block th:replace="_tab1::adminTab">
+                вставить код вклвдок админа таб1
+            </th:block>
+        </div>
+        <div class="tab-pane" id="tab2"></div>
+    </div>
+</div>
+
+
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+<script>
+
+    $('#myTabs a').click(function (e) {
+        e.preventDefault();
+
+        var url = $(this).attr("data-url");
+        var href = this.hash;
+        var pane = $(this);
+
+        $(href).load(url, function (result) {
+            pane.tab('show');
+        });
+
+    });
+
+
+    $('#editUserModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget); // Button that triggered the modal
+        const id = button.data('id'); // Extract info from data-* attributes
+        const modal = $(this);
+        if (id) {
+            $.get({
+                url: '/admin/' + id,
+                success: (data) => {
+                    modal.find('#newId').val(data.id),
+                        modal.find('#newFirstName').val(data.firstName),
+                        modal.find('#newSecondName').val(data.secondName),
+                        modal.find('#newAge').val(data.age),
+                        modal.find('#newEmail').val(data.email),
+                        modal.find('#newPassword').val(data.password),
+                        modal.find('#newRoles').val(data.roles);
+                },
+                error: (err) => {
+                    alert(err);
+                }
+            });
+        }
+    });
+
+
+    $('#deleteUserModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const id = button.data('id');
+        const modal = $(this);
+        if (id) {
+            $.get({
+                url: '/admin/' + id,
+                success: (data) => {
+                    modal.find('#delId').val(data.id),
+                        modal.find('#delFirstName').val(data.firstName),
+                        modal.find('#delSecondName').val(data.secondName),
+                        modal.find('#delAge').val(data.age),
+                        modal.find('#delEmail').val(data.email),
+                        modal.find('#delPassword').val(data.password),
+                        modal.find('#delRoles').val(data.roles);
+                },
+                error: (err) => {
+                    alert(err);
+                }
+            });
+        }
+    });
+
+    $('#delete-user-button').click(function() {
+        let modal = $('#deleteUserModal');
+        const id = modal.find('#delId').val()
+        $.ajax({
+            url: 'admin/' + id + '/delete',
+            type: 'DELETE',
+            dataType: "html",
+            success: (data) => {
+                $("#tab1").html(data);
+                $("#tab1").show();
+            },
+            error: (err) => {
+            },
+        });
+        $('#editUserModal').modal('hide');
+        $('.modal-backdrop').hide();
+        $("body").removeClass("modal-open");
+        $('#editUserModal').attr('aria-hidden', true);
+    });
+
+
+    $('#edit-button').click(function() {
+        let modal = $('#editUserModal');
+        let user = {
+            id: modal.find('#newId').val(),
+            firstName: modal.find('#newFirstName').val(),
+            secondName: modal.find('#newSecondName').val(),
+            age: modal.find('#newAge').val(),
+            email: modal.find('#newEmail').val(),
+            password:modal.find('#newPassword').val(),
+            roles: modal.find('#newRoles').val(),
+        };
+        if (modal.find('#newId').val()) {
+            user.id = modal.find('#newId').val()
+        }
+        $.ajax({
+            url: 'admin/editUser',
+            type: 'POST',
+            data: JSON.stringify(user),
+            contentType: "application/json; charset=utf-8",
+            dataType: "html",
+            success: (data) => {
+                $("#tab1").html(data);
+
+            },
+            error: (err) => {
+
+            },
+        });
+        $('#editUserModal').modal('hide');
+        $('.modal-backdrop').hide();
+        $("body").removeClass("modal-open");
+        $('#editUserModal').attr('aria-hidden', true);
+    });
+
+
+    // load first tab content
+
+
+    $('#tab1').load($('.nav-link.active').attr("data-url"), function (result) {
+
+    });
+
+</script>
+
+
+</body>
+</html>
